@@ -127,3 +127,13 @@ const transaction = await contract.batchSubmitReports(
 )
 console.log('transaction.hash', transaction.hash)
 ```
+
+## Overriding the debtor
+
+Multiple SBPs taken out for the same type of re-staking application which share a common middleware instance will require
+a debtor address override (owner of the SBP) when slashing the SBP position.
+
+The `checkLiveness` function in the `liveness-scan` script covers how to do this and interact with the liveness API
+```
+async function checkLiveness(slot: number, debtor: string = '')
+```
