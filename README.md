@@ -137,3 +137,34 @@ The `checkLiveness` function in the `liveness-scan` script covers how to do this
 ```
 async function checkLiveness(slot: number, debtor: string = '')
 ```
+
+# Scanning for kick-able proposers (from K2 protocol)
+
+Proposers that do not maintain `32 ether` as an effective balance AND have natively delegated to K2 are not 
+eligible for continuous native delegation. 
+
+In order to check if any natively delegated proposers have violated this protocol rule, we can use the K2 reporter.
+
+As above, make sure the reporter has been started:
+```
+yarn start
+```
+
+Then call the following endpoint:
+```
+/invalid-effective-balances
+```
+
+You will see logs like this in the reporter
+```
+Collecting list of BLS public keys with active delegations...
+Collecting effective balances for all protocol native delegation keys...
+Fetching effective balances for 1 BLS keys in batches of 75 to the consensus
+Processing batch 1 of 1
+Found 0 BLS public keys with effective balances < 32 ether
+```
+
+With an API response in this format:
+```
+{ "keysWithLessThan32EffectiveBalance": [] }
+```

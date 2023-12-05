@@ -1,15 +1,22 @@
 type EnvVars = {
     MIDDLEWARE_API: string;
     PROVIDER_URL: string;
+    BEACON_URL: string;
 }
 
 export function getEnvVars(): EnvVars {
-    if (!process.env.MIDDLEWARE_API || !process.env.PROVIDER_URL) {
-        throw new Error('Missing environment variables')
+    const envVars = process.env;
+    if (
+        !envVars.MIDDLEWARE_API
+        || !envVars.PROVIDER_URL
+        || !envVars.BEACON_URL
+    ) {
+        throw new Error('One or more missing environment variables')
     }
 
     return {
-        MIDDLEWARE_API: process.env.MIDDLEWARE_API as string,
-        PROVIDER_URL: process.env.PROVIDER_URL as string,
-    }
+        MIDDLEWARE_API: envVars.MIDDLEWARE_API as string,
+        PROVIDER_URL: envVars.PROVIDER_URL as string,
+        BEACON_URL: envVars.BEACON_URL as string,
+    };
 }

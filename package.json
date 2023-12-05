@@ -11,7 +11,7 @@
   "author": "Abstract systems SEZC",
   "license": "MIT",
   "dependencies": {
-    "@blockswaplab/k2-sdk": "1.0.9",
+    "@blockswaplab/k2-sdk": "1.1.1",
     "axios": "^1.6.0",
     "dotenv": "^16.3.1",
     "ethers": "5.7.2",
