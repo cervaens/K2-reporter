@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@blockswaplab/k2-sdk@1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@blockswaplab/k2-sdk/-/k2-sdk-1.1.1.tgz#789cfa0f66ec6bfe0e916405199a5eff5d2e3ac8"
-  integrity sha512-UqzfR69vNRZn/2kJTZIhkkFFS52jWY2/9zALrhUMQ2NGSjnXhjmx//+/xMFjTeRH44f9o974+xGzjJT95Wb3jA==
+"@blockswaplab/k2-sdk@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@blockswaplab/k2-sdk/-/k2-sdk-1.1.2.tgz#811c8e9323ca2c8fb4c1cb20735c1d1fa88a67e8"
+  integrity sha512-qLBi4KoBPCik5qOPUOLzc0clJViLJcH7Ihd9+0NJSbudtXy8laEg+axYo+mbJGuIZVvHWysK+ax2l8tgPUXiLA==
   dependencies:
     "@blockswaplab/rpbs-self-attestation" "1.0.0"
     "@ethersproject/abstract-provider" "^5.7.0"

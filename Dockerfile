@@ -9,6 +9,7 @@ COPY package.json .
 COPY handler.ts .
 COPY response-utils.ts .
 COPY services ./services
+COPY handers ./handlers
 
 RUN npm install --only=production
 RUN npm run build

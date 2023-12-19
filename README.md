@@ -2,11 +2,11 @@
 
 [K2 Reporter](https://github.com/restaking-cloud/K2-reporter) is a Typescript server that uses the [K2 SDK](https://github.com/restaking-cloud/k2-sdk) in order to work for the K2 protocol. 
 
-More information regarding the K2 protocol can be found [here](https://restaking.cloud).
+More information regarding the K2 protocol can be found [here](https://restaking.cloud). Docs can be found [here](https://docs.restaking.cloud).
 
 K2 reporters are paid in native ETH for:
 - Slashing SBP (Slashable Borrow Positions) for detected liveness or corruption issues associated with software related to a service provider
-- Kicking node operators with balances less than 32 ETH
+- Kicking proposers that have natively delegated but now have effective balances less than 32 ETH or have removed their PoN login
 
 and more soon!
 
@@ -40,9 +40,9 @@ Before running the reporter, the environment needs to be set up.
 
 The following parameters are important to the reporter:
 - Middleware API Endpoint
-- Execution layer Node URL
+- Execution layer and consensus Node URL
 
-Execution layer node URL can be any node provider like Quicknode, Alchemy etc.
+Execution layer node URL can be any node provider like Quicknode, Alchemy etc. At the time of writing Quicknode endpoints offer both beacon and execution layer access. Beacon chain access is required when checking for effective balance issues.
 
 Middleware API endpoint will be the middleware serving one or more SBP positions. Every middleware has a default
 service provider borrow address but that can be overridden. Ultimately, when opening SBP positions on chain, borrowers
@@ -168,3 +168,17 @@ With an API response in this format:
 ```
 { "keysWithLessThan32EffectiveBalance": [] }
 ```
+
+## Proposers that have removed their PoN login and are no longer eligible to be part of K2
+Call the following endpoint:
+```
+/invalid-pon-login
+```
+
+The API response will be in this format:
+```
+{"blsKeysWithInvalidPoNLogin":[]}
+```
+
+Where offending BLS keys will be included in the array if any are found.
+
