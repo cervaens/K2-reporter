@@ -1,0 +1,41 @@
+version: "3"
+services:
+  oracle-one:
+    build:
+      context: ./oracle
+    environment:
+      - HTTP_PORT=1111
+      - LAMBDA_PORT=1110
+    ports:
+      - "1111:1111"
+      - "1110:1110"
+
+  oracle-two:
+    build:
+      context: ./oracle
+    environment:
+      - HTTP_PORT=2222
+      - LAMBDA_PORT=2221
+    ports:
+      - "2222:2222"
+      - "2221:2221"
+
+  oracle-three:
+    build:
+      context: ./oracle
+    environment:
+      - HTTP_PORT=3333
+      - LAMBDA_PORT=3332
+    ports:
+      - "3333:3333"
+      - "3332:3332"
+
+  oracle-four:
+    build:
+      context: ./oracle
+    environment:
+      - HTTP_PORT=4444
+      - LAMBDA_PORT=4443
+    ports:
+      - "4444:4444"
+      - "4443:4443"

@@ -1,23 +1,37 @@
-# K2 Reporter
+# K2 Reporter Oracle Corruption
 
-[K2 Reporter](https://github.com/restaking-cloud/K2-reporter) is a Typescript server that uses the [K2 SDK](https://github.com/restaking-cloud/k2-sdk) in order to work for the K2 protocol. 
+The goal is to extend K2 Reporter to have an oracle corruption check.
 
-More information regarding the K2 protocol can be found [here](https://restaking.cloud). Docs can be found [here](https://docs.restaking.cloud).
+So 4 oracles were defined in the app with names: oracleOne,oracleTwo,oracleThree,oracleFour (this should be stored in a DB but for now are hardcoded). To check the corruption of an oracle the following endpoint needs to be called:
 
-K2 reporters are paid in native ETH for:
-- Slashing SBP (Slashable Borrow Positions) for detected liveness or corruption issues associated with software related to a service provider
-- Kicking proposers that have natively delegated but now have effective balances less than 32 ETH or have removed their PoN login
+```
+http://localhost:9999/oracle-corruption?oracle=oracleOne&slot=4
+```
 
-and more soon!
+The Reporter will identify the oracle, call its url and compare the price results with the remaining 3 oracles (considered as observability points)
 
-When a protocol (referred to as a service provider) takes out Ethereum economic security coverage for their protocol, 
-the SBP position will be created on chain and off chain they will spin up a middleware. The middleware software can be
-seen [here](https://github.com/restaking-cloud/K2-middleware).
+No report is generated as we're not using the middleware to generate them, so this app simply returns f.e. a slashing response:
 
-K2 reporters work alongside middlewares to scan for the liveness and corruption issues where middlewares will verify these
-events according to their own custom slashing logic and if verified, will authorise slashing events, paying reporters in the process.
+```
+{"slashing":true,"error":{"token":"ETH","tokenDeviationPercent":0.15261278066172057,"oracleData":"2352.2096142072296","observabilityData":"2348.625311811549"}}
+```
+
+or non-slashing:
+
+```
+{"slashing":false}
+```
+
+Each oracle randomizes at each call, so one call can return {slashing: true} and the following call to the same url can return {slashing:false}
+
+# Spinning up the 4 oracles
+
+```
+docker-compose up --build
+```
 
 # Spinning up the reporter
+
 ## Installing dependencies
 
 Yarn is the default package manager and therefore it's as simple as:
@@ -36,18 +50,9 @@ yarn build
 
 ## Configuring your environment
 
-Before running the reporter, the environment needs to be set up. 
+Before running the reporter, the environment needs to be set up.
 
-The following parameters are important to the reporter:
-- Middleware API Endpoint
-- Execution layer and consensus Node URL
-
-Execution layer node URL can be any node provider like Quicknode, Alchemy etc. At the time of writing Quicknode endpoints offer both beacon and execution layer access. Beacon chain access is required when checking for effective balance issues.
-
-Middleware API endpoint will be the middleware serving one or more SBP positions. Every middleware has a default
-service provider borrow address but that can be overridden. Ultimately, when opening SBP positions on chain, borrowers
-are nominating the public key of the designated verifier middleware that will validate and process slashings where
-the contract will reject the slashing if it does not come from the correct designated verifier.
+Just create a .env file from .env.example and fill any info in the 3 empty variables as they won't be used but will be checked if not empty
 
 ## Running
 
@@ -59,126 +64,9 @@ yarn dev
 ```
 
 Alternatively, if you just want to run without making changes just run:
+
 ```
 yarn start
 ```
 
 If it is running correctly, you should see a message that the server is running on the configured host and port.
-
-# Automatically doing liveness checks
-
-After building and running the server, the following script can be run to automatically check for liveness issues:
-```
-node dist/liveness-scan.js
-```
-
-This will start by kicking off a liveness scan that you should be able to see on the reporter server:
-```
-⚡️[server]: Server is running at http://localhost:9998
-Generating liveness report for slot 5
-Verifying liveness report...
-Liveness report verified!
-```
-
-Where a verified liveness report looks like the following from the script:
-```javascript
-{
-  inputs: {
-    rpbsSelfAttestation: {
-      signature: [Object],
-      commonInfo: [Object],
-      publicKey: '63040bb1f0de4879a6019e2a51bab6b1e4f809a6b04ff48f3568d983355b6acddce4121ddec75039b57742e291f69fcc9ddb369023626c75a2efe86bce74ebe285a0'
-    },
-    eventType: 'LIVENESS',
-    version: '1',
-    eventData: {
-      livenessData: [Object],
-      proposedSlashing: '8468571428571428',
-      query: '?slot=5'
-    }
-  },
-  signedReport: {
-    slashType: '0',
-    debtor: '0xEa0F09A471dCe34d7d3675787....',
-    signature: '0x3634303432353934656431....',
-    amount: { type: 'BigNumber', hex: '0x1e161eefc14924' },
-    identifier: 1
-  },
-  designatedVerifierSignature: {
-    deadline: 9963956,
-    v: 27,
-    r: '0xe0ea16fdb9c99b60322776a5c1f1a8c0765fef294198027ded5297243401a1d2',
-    s: '0x182fc2f56953f88f0bec778db395bbb62f03f33f104fa4612a162880dd23fef0'
-  }
-}
-```
-
-The slashing could then be reported to the reporter registry contract as simply as:
-```typescript
-import { K2 } from '@blockswaplab/k2-sdk';
-const sdk = new K2(getProvider(PROVIDER_URL));
-const contract = await sdk.contracts.reporterRegistry();
-const transaction = await contract.batchSubmitReports(
-    [{
-        ...verifiedReport.signedReport,
-        block: verifiedReport.designatedVerifierSignature.deadline
-    }],
-    [verifiedReport.designatedVerifierSignature]
-)
-console.log('transaction.hash', transaction.hash)
-```
-
-## Overriding the debtor
-
-Multiple SBPs taken out for the same type of re-staking application which share a common middleware instance will require
-a debtor address override (owner of the SBP) when slashing the SBP position.
-
-The `checkLiveness` function in the `liveness-scan` script covers how to do this and interact with the liveness API
-```
-async function checkLiveness(slot: number, debtor: string = '')
-```
-
-# Scanning for kick-able proposers (from K2 protocol)
-
-Proposers that do not maintain `32 ether` as an effective balance AND have natively delegated to K2 are not 
-eligible for continuous native delegation. 
-
-In order to check if any natively delegated proposers have violated this protocol rule, we can use the K2 reporter.
-
-As above, make sure the reporter has been started:
-```
-yarn start
-```
-
-Then call the following endpoint:
-```
-/invalid-effective-balances
-```
-
-You will see logs like this in the reporter
-```
-Collecting list of BLS public keys with active delegations...
-Collecting effective balances for all protocol native delegation keys...
-Fetching effective balances for 1 BLS keys in batches of 75 to the consensus
-Processing batch 1 of 1
-Found 0 BLS public keys with effective balances < 32 ether
-```
-
-With an API response in this format:
-```
-{ "keysWithLessThan32EffectiveBalance": [] }
-```
-
-## Proposers that have removed their PoN login and are no longer eligible to be part of K2
-Call the following endpoint:
-```
-/invalid-pon-login
-```
-
-The API response will be in this format:
-```
-{"blsKeysWithInvalidPoNLogin":[]}
-```
-
-Where offending BLS keys will be included in the array if any are found.
-
