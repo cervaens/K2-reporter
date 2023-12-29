@@ -27,6 +27,7 @@ Each oracle randomizes at each call, so one call can return {slashing: true} and
 # Spinning up the 4 oracles
 
 ```
+cd environment-emulation
 docker-compose up --build
 ```
 
